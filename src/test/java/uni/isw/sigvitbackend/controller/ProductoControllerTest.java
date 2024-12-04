@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
@@ -30,18 +31,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 @ExtendWith(MockitoExtension.class)
 public class ProductoControllerTest {
+        @Autowired
+        private MockMvc mockMvc;
 
-    @Autowired
-    private MockMvc mockMvc;
+        @MockBean
+        private ProductoService productoService;
 
-    @MockBean
-    private ProductoService productoService;
+        private ProductoRequest productoRequest;
+        private ProductoResponse productoResponse, productoResponse2, productoResponse3;
 
-    private ProductoRequest productoRequest;
-    private ProductoResponse productoResponse, productoResponse2, productoResponse3;
-
-    @BeforeEach
-    public void init() {
+        @BeforeEach
+        public void init() {
         productoRequest = new ProductoRequest();
         productoRequest.setIdProducto(1);
         productoRequest.setNombre("Producto 1");
@@ -76,10 +76,10 @@ public class ProductoControllerTest {
         productoResponse3.setPrecioVenta(300.0);
         productoResponse3.setStock(20);
         productoResponse3.setImagen("imagen3.jpg");
-    }
+        }
 
-    @Test
-    public void testInsertProducto() throws Exception {
+        @Test
+        public void testInsertProducto() throws Exception {
         when(productoService.insertProducto(productoRequest)).thenReturn(productoResponse);
 
         ResultActions response = mockMvc.perform(post("/api/v1/producto/insert")
@@ -88,10 +88,10 @@ public class ProductoControllerTest {
 
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$.nombre", CoreMatchers.is(productoResponse.getNombre())));
-    }
+        }
 
-    @Test
-    public void testDeleteProducto() throws Exception {
+        @Test
+        public void testDeleteProducto() throws Exception {
         given(productoService.findProducto(ArgumentMatchers.anyLong())).willReturn(productoResponse);
         doNothing().when(productoService).deleteProducto(ArgumentMatchers.anyLong());
 
@@ -100,10 +100,20 @@ public class ProductoControllerTest {
                 .content((new ObjectMapper()).writeValueAsString(productoRequest)));
 
         response.andExpect(status().isOk());
-    }
+        }
 
-    @Test
-    public void testUpdateProducto() throws Exception {
+        // to fix
+        // @Test
+        // public void testDeleteProductoWithEmptyOptional() throws Exception {
+        // ResultActions response = mockMvc.perform(delete("/api/v1/producto/delete")
+        //         .contentType(MediaType.APPLICATION_JSON)
+        //         .content((new ObjectMapper()).writeValueAsString(Optional.empty())));
+
+        // response.andExpect(status().isBadRequest());
+        // }
+
+        @Test
+        public void testUpdateProducto() throws Exception {
         given(productoService.findProducto(ArgumentMatchers.anyLong())).willReturn(productoResponse);
 
         productoRequest.setNombre("Producto 1");
@@ -116,10 +126,10 @@ public class ProductoControllerTest {
 
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$.nombre", CoreMatchers.is(productoRequest.getNombre())));
-    }
+        }
 
-    @Test
-    public void testGetProductos() throws Exception {
+        @Test
+        public void testGetProductos() throws Exception {
         when(productoService.listProductos()).thenReturn(Arrays.asList(productoResponse2, productoResponse3));
 
         ResultActions response = mockMvc.perform(get("/api/v1/producto")
@@ -128,10 +138,10 @@ public class ProductoControllerTest {
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()", CoreMatchers.is(2)))
                 .andExpect(jsonPath("$[0].nombre", CoreMatchers.is(productoResponse2.getNombre())));
-    }
+        }
 
-    @Test
-    public void testFindProductoById() throws Exception {
+        @Test
+        public void testFindProductoById() throws Exception {
         when(productoService.findProducto(1L)).thenReturn(productoResponse);
 
         ResultActions response = mockMvc.perform(get("/api/v1/producto/find")
@@ -140,5 +150,14 @@ public class ProductoControllerTest {
 
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$.nombre", CoreMatchers.is(productoResponse.getNombre())));
-    }
+        }
+
+        // to fix
+        // @Test
+        // public void testFindProductoByIdWithEmptyOptional() throws Exception {
+        //         ResultActions response = mockMvc.perform(get("/api/v1/producto/find")
+        //                 .contentType(MediaType.APPLICATION_JSON)
+        //                 .content((new ObjectMapper()).writeValueAsString(Optional.empty())));
+        //         response.andExpect(status().isBadRequest());
+        // }
 }
